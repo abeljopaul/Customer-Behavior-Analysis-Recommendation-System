@@ -109,10 +109,41 @@ The product recommendation system was built using collaborative filtering techni
 
 #### Example Output:
 Top 5 product recommendations for a sample customer:
-```plaintext
-1. Product A (Predicted Rating: 4.5)
-2. Product B (Predicted Rating: 4.3)
-3. Product C (Predicted Rating: 4.2)
-4. Product D (Predicted Rating: 4.1)
-5. Product E (Predicted Rating: 4.0)
+
+
+---
+
+## Model Evaluation
+### Clustering Quality:
+- **Silhouette Score:** 0.562  
+  - Interpretation: This score indicates moderate clustering quality, suggesting that customer segments are reasonably well-separated but with some overlap. Further feature engineering or alternative clustering methods could improve separation.
+
+### Recommendation System Metrics:
+- **Root Mean Squared Error (RMSE):** 80984.14  
+  - Interpretation: A high RMSE indicates that the model's predictions deviate significantly from actual values. Optimization or hybrid approaches may reduce error.
+- **Mean Absolute Error (MAE):** 80983.79  
+  - Interpretation: The MAE reflects the average magnitude of errors in predictions. While informative, the high value highlights the need for improvement.
+
+---
+
+## Assumptions and Limitations
+### Assumptions:
+1. **Data Quality:** The dataset is assumed to be accurate, complete, and representative of customer purchasing behavior during the given period (December 2010 to December 2011).
+2. **RFM Metrics:** Equal weights were assigned to Recency, Frequency, and Monetary metrics for segmentation, assuming their equal importance to customer behavior.
+3. **Collaborative Filtering:** The recommendation system assumes that customers with similar purchase histories have similar preferences.
+
+### Limitations:
+1. **Sparse Data:** The collaborative filtering approach struggles with sparsity in the user-item matrix, where many products have few or no interactions.
+2. **Exclusion of External Factors:** The analysis does not consider external factors like promotions, seasonality, or customer demographics, which may influence purchasing behavior.
+3. **High RMSE and MAE:** The high error metrics suggest limited accuracy in the recommendation system, likely due to sparsity and lack of implicit feedback.
+4. **Moderate Clustering Quality:** The silhouette score (0.562) indicates some overlap between clusters, suggesting that customer behaviors might not be entirely distinct.
+
+---
+
+## Installation and Usage
+### Environment Setup:
+Install the required dependencies using the following command:
+```bash
+pip install -r requirements.txt
+
 
