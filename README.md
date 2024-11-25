@@ -110,7 +110,14 @@ The product recommendation system was built using collaborative filtering techni
 #### Example Output:
 Top 5 product recommendations for a sample customer:
 
+```plaintext
+1. Product A (Predicted Rating: 4.5)
+2. Product B (Predicted Rating: 4.3)
+3. Product C (Predicted Rating: 4.2)
+4. Product D (Predicted Rating: 4.1)
+5. Product E (Predicted Rating: 4.0)
 
+```
 ---
 
 ## Model Evaluation
@@ -145,5 +152,27 @@ Top 5 product recommendations for a sample customer:
 Install the required dependencies using the following command:
 ```bash
 pip install -r requirements.txt
+```
+---
 
+## Credits and License
+### Acknowledgments:
+This project was made possible by the following resources and tools:
+- **Dataset:**  
+  The dataset used in this project was sourced from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/352/online+retail).  
+- **Tools and Libraries:**  
+  - [Pandas](https://pandas.pydata.org/) - For data manipulation and analysis.  
+  - [NumPy](https://numpy.org/) - For numerical computations.  
+  - [Matplotlib](https://matplotlib.org/) - For creating visualizations.  
+  - [Seaborn](https://seaborn.pydata.org/) - For enhanced data visualization.  
+  - [scikit-learn](https://scikit-learn.org/) - For machine learning and clustering.  
+  - [Surprise](http://surpriselib.com/) - For building the collaborative filtering recommendation system.
+
+### License:
+This project is licensed under the **MIT License**.  
+You are free to use, modify, and distribute this software, provided proper attribution is given to the original author. See the `LICENSE` file in this repository for more details.
+
+---
+
+**Last Updated:** November 25, 2024
 
