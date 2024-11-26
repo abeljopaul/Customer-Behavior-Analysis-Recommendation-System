@@ -7,3 +7,4 @@ mlxtend
 scipy
 openpyxl
 scikit-surprise
+pipwin
