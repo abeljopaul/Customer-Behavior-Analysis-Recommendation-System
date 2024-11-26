@@ -35,7 +35,7 @@ def preprocess_data(data):
     )
     return sparse_matrix, customer_mapping, product_mapping
 
-# Train recommendation model (No caching here)
+# Train recommendation model
 def train_model(sparse_matrix):
     model = implicit.als.AlternatingLeastSquares(factors=20, iterations=10, regularization=0.1)
     # Fit the model on the sparse matrix
@@ -46,7 +46,14 @@ def train_model(sparse_matrix):
 def get_recommendations(model, customer_id, customer_mapping, product_mapping, reverse_product_mapping, n=5):
     if customer_id not in customer_mapping:
         return []
+    
     customer_index = customer_mapping[customer_id]
+    
+    # Ensure the customer exists in the sparse matrix (has interactions)
+    if sparse_matrix[customer_index].count_nonzero() == 0:
+        st.warning(f"Customer {customer_id} has no interactions.")
+        return []
+    
     recommendations = model.recommend(
         customer_index,
         sparse_matrix,
