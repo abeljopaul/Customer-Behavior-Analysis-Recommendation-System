@@ -1,71 +1,96 @@
 import streamlit as st
 import pandas as pd
 import pickle
-from surprise import SVD
-from surprise import Dataset
-from surprise import Reader
+import implicit
+from scipy.sparse import csr_matrix
 
-# Load the pre-trained model
-@st.cache_resource
-def load_model():
-    with open('recommendation_model.pkl', 'rb') as file:
-        model = pickle.load(file)
-    return model
-
-# Define the recommendation function
-def get_recommendations(model, customer_id, user_item_triplets, n=5):
-    # Get all unique product IDs and descriptions
-    all_products = user_item_triplets[['StockCode', 'Description']].drop_duplicates()
-
-    # Get products already purchased by the customer
-    purchased_products = user_item_triplets[user_item_triplets['CustomerID'] == customer_id]['StockCode']
-
-    # Filter products not yet purchased
-    products_to_predict = all_products[~all_products['StockCode'].isin(purchased_products.values)]
-
-    # Predict ratings for all products not purchased
-    predictions = [
-        (row['StockCode'], row['Description'], model.predict(customer_id, row['StockCode']).est)
-        for _, row in products_to_predict.iterrows()
-    ]
-
-    # Sort predictions by estimated rating
-    top_recommendations = sorted(predictions, key=lambda x: x[2], reverse=True)[:n]
-    return top_recommendations
-
-# App Title
-st.title("Product Recommendation System")
-
-# Input Section
-st.sidebar.header("User Input")
-customer_id = st.sidebar.text_input("Enter Customer ID:", value="12345")
-num_recommendations = st.sidebar.slider("Number of Recommendations:", 1, 10, 5)
-
-# Load necessary data
-@st.cache_resource
+# Load data
+@st.cache_data
 def load_data():
-    # Replace with the correct path to your .xlsx file
-    data_path = 'OnlineRetail.xlsx'
+    data_path = "OnlineRetail.xlsx"  # Ensure this file is uploaded to the same directory
     data = pd.read_excel(data_path)
-    # Ensure column names match expectations
-    data = data.rename(columns={"Customer ID": "CustomerID", "Stock Code": "StockCode", "Description": "Description"})
+    data = data.rename(
+        columns={
+            "Customer ID": "CustomerID",
+            "Stock Code": "StockCode",
+            "Description": "Description",
+            "Quantity": "Quantity",
+        }
+    )
+    # Drop rows with missing CustomerID or StockCode
+    data = data.dropna(subset=["CustomerID", "StockCode"])
     return data
 
-user_item_triplets = load_data()
+# Preprocess data into sparse matrix
+@st.cache_resource
+def preprocess_data(data):
+    # Map CustomerID and StockCode to integer indices
+    customer_mapping = {id: idx for idx, id in enumerate(data["CustomerID"].unique())}
+    product_mapping = {id: idx for idx, id in enumerate(data["StockCode"].unique())}
+    data["CustomerIndex"] = data["CustomerID"].map(customer_mapping)
+    data["ProductIndex"] = data["StockCode"].map(product_mapping)
 
-# Load the model
-model = load_model()
+    # Create sparse matrix
+    sparse_matrix = csr_matrix(
+        (data["Quantity"], (data["CustomerIndex"], data["ProductIndex"]))
+    )
+    return sparse_matrix, customer_mapping, product_mapping
 
-# Display Recommendations
+# Train recommendation model
+@st.cache_resource
+def train_model(sparse_matrix):
+    model = implicit.als.AlternatingLeastSquares(factors=20, iterations=10, regularization=0.1)
+    # Fit the model on the sparse matrix
+    model.fit(sparse_matrix)
+    return model
+
+# Get recommendations
+def get_recommendations(model, customer_id, customer_mapping, product_mapping, reverse_product_mapping, n=5):
+    if customer_id not in customer_mapping:
+        return []
+    customer_index = customer_mapping[customer_id]
+    recommendations = model.recommend(
+        customer_index,
+        sparse_matrix,
+        N=n,
+        filter_already_liked_items=True,
+    )
+    return [(reverse_product_mapping[idx], score) for idx, score in recommendations]
+
+# App UI
+st.title("Product Recommendation System with Implicit")
+
+# Sidebar inputs
+st.sidebar.header("User Input")
+customer_id_input = st.sidebar.text_input("Enter Customer ID:")
+num_recommendations = st.sidebar.slider("Number of Recommendations:", 1, 10, 5)
+
+# Load and preprocess data
+data = load_data()
+sparse_matrix, customer_mapping, product_mapping = preprocess_data(data)
+reverse_product_mapping = {v: k for k, v in product_mapping.items()}
+
+# Train or load model
+model = train_model(sparse_matrix)
+
+# Generate recommendations
 if st.sidebar.button("Get Recommendations"):
     try:
-        recommendations = get_recommendations(model, customer_id, user_item_triplets, n=num_recommendations)
+        recommendations = get_recommendations(
+            model,
+            customer_id=int(customer_id_input),
+            customer_mapping=customer_mapping,
+            product_mapping=product_mapping,
+            reverse_product_mapping=reverse_product_mapping,
+            n=num_recommendations,
+        )
         if recommendations:
-            st.header(f"Top {num_recommendations} Recommendations for Customer {customer_id}")
-            for idx, (product_id, description, rating) in enumerate(recommendations, 1):
+            st.header(f"Top {num_recommendations} Recommendations for Customer {customer_id_input}")
+            for idx, (product_id, score) in enumerate(recommendations, 1):
+                description = data[data["StockCode"] == product_id]["Description"].iloc[0]
                 st.write(f"**{idx}. Product ID:** {product_id}")
                 st.write(f"**Description:** {description}")
-                st.write(f"**Estimated Rating:** {rating:.2f}")
+                st.write(f"**Score:** {score:.2f}")
         else:
             st.warning("No recommendations available for this customer.")
     except Exception as e:
