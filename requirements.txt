@@ -1,15 +1,7 @@
 streamlit
 pandas
 numpy
-matplotlib
-scikit-learn
-mlxtend
 scipy
+implicit
 openpyxl
-scikit-surprise
-numpy==1.21.6
-scipy==1.7.3
-scikit-surprise==1.1.1
---no-binary :all: scikit-surprise
-Cython
 
