@@ -1,12 +1,10 @@
+streamlit
 pandas
+numpy
 matplotlib
 scikit-learn
 mlxtend
 scipy
 openpyxl
 scikit-surprise
-pipwin
-python==3.9
-implicit
-streamlit==1.40.2
-numpy==1.21.6
+
