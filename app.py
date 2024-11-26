@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import pickle
 import implicit
 from scipy.sparse import csr_matrix
 
@@ -22,7 +21,7 @@ def load_data():
     return data
 
 # Preprocess data into sparse matrix
-@st.cache_resource
+@st.cache_data
 def preprocess_data(data):
     # Map CustomerID and StockCode to integer indices
     customer_mapping = {id: idx for idx, id in enumerate(data["CustomerID"].unique())}
@@ -36,8 +35,7 @@ def preprocess_data(data):
     )
     return sparse_matrix, customer_mapping, product_mapping
 
-# Train recommendation model
-@st.cache_resource
+# Train recommendation model (No caching here)
 def train_model(sparse_matrix):
     model = implicit.als.AlternatingLeastSquares(factors=20, iterations=10, regularization=0.1)
     # Fit the model on the sparse matrix
