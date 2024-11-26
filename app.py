@@ -3,7 +3,6 @@ import pandas as pd
 import pickle
 import implicit
 from scipy.sparse import csr_matrix
-from surprise import SVD
 
 # Load data
 @st.cache_data
